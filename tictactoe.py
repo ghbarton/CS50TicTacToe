@@ -7,7 +7,9 @@ import math
 from operator import indexOf
 
 from sqlalchemy import false
-
+globalCount = 0
+treesExplored = 0
+treesPruned = 0
 X = "X"
 O = "O"
 EMPTY = None
@@ -179,14 +181,25 @@ def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    
+    global globalCount
+    global treesExplored
+    global treesPruned
+    treesExplored = 0
+    treesPruned = 0
+    # Copy board
     master = copy.deepcopy(board)
     frontier = []
+    # Get every possible move
     moves = actions(copy.deepcopy(master))
+    # If first move, remove duplicates of corners and sides
+    if (len(moves) == 9):
+        moves = [copy.deepcopy(moves[0]), copy.deepcopy(moves[1]), copy.deepcopy(moves[4])]
+    # Add the result of each move (board) to the frontier 
     for move in moves:
         b = result(copy.deepcopy(master), copy.deepcopy(move))
         frontier.append(b)
-
+    # For each move represented by a board in the frontier
+    # find the optimal score for the opposing player
     for item in frontier:
         if (player(copy.deepcopy(item)) == "X"):
             outcome = maxMove(copy.deepcopy(item)) 
@@ -194,33 +207,52 @@ def minimax(board):
         else:
             outcome = minMove(copy.deepcopy(item))
             frontier[frontier.index(item)] = outcome
-    print("FRONTIER: ", frontier)
+    print(f"Total Explored: {globalCount:>6} \nTrees Explored: {treesExplored:>6} \nTrees Pruned {treesPruned:>9}")
+    # Return the first move gives the best score to the current player
     if (player(copy.deepcopy(master)) == "X"):
         return moves[frontier.index(max(frontier))]
     else:
         return moves[frontier.index(min(frontier))]
 
+#Returns lowest possible score of a move
 def minMove(minBoard):
-    minResults = []
+    global globalCount
+    global treesExplored
+    global treesPruned
+    treesExplored += 1
+    # If this board is terminal then return the score
     if (terminal(copy.deepcopy(minBoard)) == True):
+        globalCount += 1
         #print("Min terminal: ", utility(copy.deepcopy(minBoard)))
         return utility(copy.deepcopy(minBoard))
+    # Store the score of each move in results
+    minResults = []
+    # Create a new board representing each move
     minMoves = actions(copy.deepcopy(minBoard))
+    # Add this to a frontier
     minFrontier = []
     for minMove in minMoves:
         minFrontier.append(result(copy.deepcopy(minBoard), minMove))
+    # Check each move for the optimal reply for the opponent
     for minItem in minFrontier:
         minResults.append(maxMove(copy.deepcopy(minItem)))
+        # If the optimal reply from this move for the
+        # opponent is -1 then return result as it already has a best case
         if(minResults[-1] == -1):
+            if(len(minResults) < len(minFrontier)):
+                treesPruned +=1
             return -1
-    #print("Min Frontier: ", min(minResults))
     return min(minResults)
-    return minFrontier[min(range(len(minFrontier)), key=minFrontier.__getitem__)]
 
+#Returns highest possible score of a move
 def maxMove(maxBoard):
+    global globalCount
+    global treesExplored
+    global treesPruned
+    treesExplored += 1
     maxResults = []
     if (terminal(copy.deepcopy(maxBoard)) == True):
-        #print("Max terminal: ", utility(copy.deepcopy(maxBoard)))
+        globalCount += 1
         return utility(copy.deepcopy(maxBoard))
     maxMoves = actions(copy.deepcopy(maxBoard))
     maxFrontier = []
@@ -229,80 +261,9 @@ def maxMove(maxBoard):
     for maxItem in maxFrontier:
         maxResults.append(minMove(copy.deepcopy(maxItem)))
         if(maxResults[-1] == 1):
+            if(len(maxResults) < len(maxFrontier)):
+                treesPruned +=1
             return 1
-    #print("Max Frontier: ", max(maxResults))
     return max(maxResults)
-    #return maxFrontier[max(range(len(maxFrontier)), key=maxFrontier.__getitem__)]
 
-#    boardCopy = board
-#    if(terminal(boardCopy) == False):  
-#        moves = actions(boardCopy) 
-#        frontier = []
-#        for moveIdx, move in enumerate(moves):
-#            print("\n--- MAIN LOOP ---", moveIdx)
-#            if (player(board) == "X"):
-#                frontier.append(minimax(result(boardCopy, move)))
-#            else:
-#                frontier.append(minimax(result(boardCopy, move)))
-#        # return the move that leads to the highest score 
-#        if(player(board) == "X"):
-#            return moves[max(range(len(frontier)), key=frontier.__getitem__)]
-#        # return the move that leads to the lowest score (ie best of O) 
-#        if(player(board) == "O"):
-#            return moves[min(range(len(frontier)), key=frontier.__getitem__)]
-#    return utility(boardCopy)
-
-    raise NotImplementedError
-
-
-
-#def maxMove(board):
-#    boardCopy = board
-#    print("\nMAX --- ")
-#    moves = actions(boardCopy)
-#    print("BOARD STATE: ", boardCopy)
-#    print("COPY BOARD STATE:", board)
-#    print("POSSIBLE MOVES: ", moves)
-#    frontier = []
-#    if (terminal(boardCopy)):
-#        print("\n --- Number returned --- \n", "val: ", utility(board), ", Board: ", board, "\n")
-#        return utility(boardCopy)
-#    for moveIdx, move in enumerate(moves):
-#        print("BOARD COPY STATE: ", boardCopy)
-#        print("Checking move: ", move)
-#        newBoard = result(boardCopy, move)
-#        frontier.append(minMove(newBoard))
-#        #if (terminal(newBoard)):
-#        #    frontier.append(utility(newBoard))
-#        #    print("\nTERMINAL: Frontier size: ", frontier, ", Index: ", moveIdx, ", Result: ", utility(newBoard))
-#        #else:
-#        #    frontier.append(minMove(newBoard))
-#        #    print("\nAdding new move: Frontier size: ", frontier, ", Index: ", moveIdx, ", Result: ", utility(newBoard))
-#    return max(range(len(frontier)), key=frontier.__getitem__)
-
-#    minBoardCopy = minBoard
-#    print("\nMIN --- ")
-#    moves = actions(minBoardCopy)
-#    print("minBOARD STATE: ", minBoard)
-#    print("minBOARD COPY STATE: ", minBoardCopy)
-#    print("minPOSSIBLE MOVES: ", moves)
-#    frontier = []
-#    if (terminal(minBoardCopy)):
-#        print("\n --- minNumber returned --- \n", "val: ", utility(minBoardCopy), ", Board: ", minBoardCopy, "\n")
-#        return utility(minBoardCopy)
-#    for moveIdx, move in enumerate(moves):
-#        print("minBOARD COPY STATE: ", minBoardCopy)
-#        print("minChecking move: ", move)
-#        minNewBoard = result(minBoardCopy, move)
-#        frontier.append(maxMove(minNewBoard))
-#        #if (terminal(newBoard)):
-#        #    frontier.append(utility(newBoard))
-#        #    print("\nTERMINAL: Frontier size: ", frontier, ", Index: ", moveIdx, ", Result: ", utility(newBoard))
-#        #    #frontier[moveIdx] = utility(newBoard)
-#        #else:
-#        #    
-#        #    print("\nAdding new move: Frontier size: ", frontier, ", Index: ", moveIdx, ", Result: ", utility(newBoard))
-#    print("minFINISHED FOR LOOP: MIN VAL: ", min(range(len(frontier)), key=frontier.__getitem__), ", Frontier Length: ", len(frontier))
-#    return min(range(len(frontier)), key=frontier.__getitem__)
-            
 
