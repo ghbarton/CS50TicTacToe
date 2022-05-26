@@ -7,7 +7,7 @@ import math
 from operator import indexOf
 
 from sqlalchemy import false
-globalCount = 0
+terminalCount = 0
 treesExplored = 0
 treesPruned = 0
 X = "X"
@@ -181,9 +181,10 @@ def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    global globalCount
+    global terminalCount
     global treesExplored
     global treesPruned
+    terminalCount = 0
     treesExplored = 0
     treesPruned = 0
     # Copy board
@@ -207,7 +208,7 @@ def minimax(board):
         else:
             outcome = minMove(copy.deepcopy(item))
             frontier[frontier.index(item)] = outcome
-    print(f"Total Explored: {globalCount:>6} \nTrees Explored: {treesExplored:>6} \nTrees Pruned {treesPruned:>9}")
+    print(f"Trees Explored: {treesExplored:>6} \nFully Explored: {terminalCount:>6} \nTrees Pruned {treesPruned:>9}")
     # Return the first move gives the best score to the current player
     if (player(copy.deepcopy(master)) == "X"):
         return moves[frontier.index(max(frontier))]
@@ -216,13 +217,13 @@ def minimax(board):
 
 #Returns lowest possible score of a move
 def minMove(minBoard):
-    global globalCount
+    global terminalCount
     global treesExplored
     global treesPruned
     treesExplored += 1
     # If this board is terminal then return the score
     if (terminal(copy.deepcopy(minBoard)) == True):
-        globalCount += 1
+        terminalCount += 1
         #print("Min terminal: ", utility(copy.deepcopy(minBoard)))
         return utility(copy.deepcopy(minBoard))
     # Store the score of each move in results
@@ -246,13 +247,13 @@ def minMove(minBoard):
 
 #Returns highest possible score of a move
 def maxMove(maxBoard):
-    global globalCount
+    global terminalCount
     global treesExplored
     global treesPruned
     treesExplored += 1
     maxResults = []
     if (terminal(copy.deepcopy(maxBoard)) == True):
-        globalCount += 1
+        terminalCount += 1
         return utility(copy.deepcopy(maxBoard))
     maxMoves = actions(copy.deepcopy(maxBoard))
     maxFrontier = []
